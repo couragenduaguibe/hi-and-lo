@@ -1,0 +1,6 @@
+{
+  // Old address: redirects everything to hi-loopy
+  "name": "animation-principles-loop",
+  "main": "worker/redirect.js",
+  "compatibility_date": "2026-10-01"
+}

@@ -1,0 +1,115 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Moodswings mascot concepts</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@500;600&display=block" rel="stylesheet">
+<style>html,body{margin:0;background:#F4F2EE}#s{position:relative;width:1600px;height:900px;overflow:hidden}canvas{display:block}
+.t{position:absolute;top:44px;left:56px;font:600 26px 'Geist Mono',monospace;color:#0F0F0F;letter-spacing:.04em}.t span{color:#8E8A83;font-weight:500}
+.n{position:absolute;bottom:54px;width:400px;text-align:center;font:600 22px 'Geist Mono',monospace;color:#0F0F0F;letter-spacing:.06em}.n small{display:block;margin-top:10px;font:500 15px 'Geist Mono',monospace;color:#8E8A83;letter-spacing:.02em}</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script></head>
+<body><div id="s"><canvas id="c"></canvas>
+<div class="t">MOODSWINGS <span>· MASCOT CONCEPTS · VOXEL, SAME STUDIO</span></div>
+<div class="n" style="left:0">A · SWING<small>one mouth, two moods; pendulum antenna</small></div>
+<div class="n" style="left:400px">B · TEMPO<small>a metronome that keeps the mood</small></div>
+<div class="n" style="left:800px">C · HI &amp; LO<small>a pair: the up and the down</small></div>
+<div class="n" style="left:1200px">D · SIDE B<small>a record with a face on the label</small></div></div>
+<script type="module">
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+const W=1600,H=900, r=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true,preserveDrawingBuffer:true});
+r.setSize(W,H,false); r.setPixelRatio(1); r.toneMapping=THREE.NoToneMapping; r.shadowMap.enabled=true; r.shadowMap.type=THREE.PCFShadowMap;
+const sc=new THREE.Scene(); sc.background=new THREE.Color(0xF4F2EE);
+const cam=new THREE.OrthographicCamera(-8,8,4.5,-4.5,1,100); const el=24*Math.PI/180, az=-18*Math.PI/180;
+cam.position.set(40*Math.sin(az)*Math.cos(el),0.75+40*Math.sin(el),40*Math.cos(az)*Math.cos(el)); cam.lookAt(0,0.75,0);
+sc.add(new THREE.AmbientLight(new THREE.Color().setRGB(.9,1.0,1.2),0.33*Math.PI));
+const k=new THREE.DirectionalLight(new THREE.Color().setRGB(1.04,.985,.9),1.2*Math.PI); k.position.set(12,10,14); k.castShadow=true; k.shadow.mapSize.set(4096,4096);
+Object.assign(k.shadow.camera,{left:-10,right:10,top:8,bottom:-6,near:1,far:60}); k.shadow.radius=6; k.shadow.bias=-.0006; k.shadow.normalBias=.02; sc.add(k);
+const rim=new THREE.DirectionalLight(new THREE.Color().setRGB(.78,.9,1.18),.5*Math.PI); rim.position.set(-14,8,-9); sc.add(rim);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(60,40),new THREE.ShadowMaterial({opacity:.2})); floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; sc.add(floor);
+const V=.1, geo=new RoundedBoxGeometry(V,V,V,2,.013);
+const COL={Y:0xFFCC00,K:0x141414,C:0xF3EEDD,A:0xF59E0B};
+const mats={}; for(const c in COL) mats[c]=new THREE.MeshPhysicalMaterial({color:COL[c],roughness:c==='K'?.38:.45,clearcoat:.3,clearcoatRoughness:.35});
+// a mascot = pixel rows (top first); depth per colour layer: front-only chars are lowercase
+function build(rows, depth, x0, opts={}) {
+  const g=new THREE.Group(), w=Math.max(...rows.map(s=>s.length)), h=rows.length, lists={};
+  rows.forEach((row,ry)=>[...row].forEach((ch,cx)=>{ if(ch==='.'||ch===' ')return; const front=ch!==ch.toUpperCase(), c=ch.toUpperCase();
+    const d=typeof depth==='function'?depth(cx,h-1-ry,w,h):depth;
+    for(let z=0;z<d;z++){ const col=(front&&z<d-1)?(opts.base||'Y'):c; (lists[col]??=[]).push([(cx-w/2+.5)*V,(h-1-ry+.5)*V,(z-d/2+.5)*V]); } }));
+  const o=new THREE.Object3D();
+  for(const c in lists){ const m=new THREE.InstancedMesh(geo,mats[c],lists[c].length); lists[c].forEach((p,i)=>{o.position.set(...p);o.updateMatrix();m.setMatrixAt(i,o.matrix)}); m.castShadow=m.receiveShadow=true; g.add(m); }
+  g.position.x=x0; g.scale.setScalar(opts.s||1.45); if(opts.ry) g.rotation.y=opts.ry; sc.add(g); return g;
+}
+// A · SWING — yellow body, tilde mouth (smile into frown), pendulum antenna mid-swing
+build([
+'..........KKK...',
+'..........KKK...',
+'.........KKKK...',
+'........K.......',
+'.......K........',
+'.......K........',
+'.YYYYYYYYYYYYYY.',
+'YYYYYYYYYYYYYYYY',
+'YYYYYYYYYYYYYYYY',
+'YYYkkYYYYYYkkYYY',
+'YYYkkYYYYYYkkYYY',
+'YYYkkYYYYYYkkYYY',
+'YYYYYYYYYYYYYYYY',
+'YYYkYYYYYkkYYYYY',
+'YYYYkYYYkYYkYYYY',
+'YYYYYkkkYYYYkYYY',
+'YYYYYYYYYYYYYYYY',
+'.YYYYYYYYYYYYYY.',
+'..KK........KK..',
+'..KK........KK..',
+'.KKK........KKK.'],(x,y,w,h)=>y>=15?2:8,-6);
+// B · TEMPO — black metronome, cream face, yellow rod and weight
+build([
+'..........YYY...',
+'..........YYY...',
+'.........yYY....',
+'......KKyKK.....',
+'.....KKKyKKK....',
+'.....KKyKKKK....',
+'....KKKyKKKKK...',
+'....KKKyKKKKK...',
+'...KKKKKKKKKKK..',
+'...KKccKKKccKK..',
+'..KKKccKKKccKKK.',
+'..KKKKKKKKKKKKK.',
+'.KKKKKKKKKKKKKKK',
+'.KKKKcKKKKKcKKKK',
+'KKKKKKcccccKKKKK',
+'KKKKKKKKKKKKKKKK',
+'YYYYYYYYYYYYYYYY',
+'YYYYYYYYYYYYYYYY'],9,-2,{base:'K'});
+// C · HI & LO — two small ones
+build([
+'.YYYYYYYY.',
+'YYYYYYYYYY',
+'YYkkYYkkYY',
+'YYkkYYkkYY',
+'YYYYYYYYYY',
+'YYkYYYYkYY',
+'YYYkkkkYYY',
+'YYYYYYYYYY',
+'.YYYYYYYY.',
+'.KK....KK.',
+'.KK....KK.'],7,1.25,{s:1.45});
+build([
+'.KKKKKKKK.',
+'KKKKKKKKKK',
+'KKKKKKKKKK',
+'KKyyKKyyKK',
+'KKyyKKyyKK',
+'KKKKKKKKKK',
+'KKKyyyyKKK',
+'KKyKKKKyKK',
+'.KKKKKKKK.',
+'.YY....YY.'],7,2.95,{s:1.45,base:'K'});
+// D · SIDE B — black disc, yellow label with a face
+const R=8; const disc=[];
+for(let y=0;y<16;y++){ let row=''; for(let x=0;x<16;x++){ const dx=x-7.5, dy=y-7.5, d=Math.hypot(dx,dy);
+  let ch = d>8.1?'.': d<3.6?'Y': (Math.abs(d-5.6)<.5?'C':'K');
+  if(d<3.6){ if((y===6||y===7)&&(x===6||x===9)) ch='k'; if(y===9&&x>=6&&x<=9) ch='k'; if(y===8&&(x===5||x===10)) ch='k'; }
+  row+=ch; } disc.push(row); }
+disc.push('....YY....YY....','....YY....YY....');
+build(disc,(x,y,w,h)=>y<2?4:3,6,{base:'K',ry:.12,s:1.6});
+window.ready=document.fonts.ready.then(()=>{r.render(sc,cam);return true});
+</script></body></html>

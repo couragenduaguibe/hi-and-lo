@@ -1,0 +1,7 @@
+{
+  // Static pages (./dist) + a tiny Worker that serves the demo video with byte ranges
+  "name": "hi-loopy",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/demo.mp4"] }
+}
